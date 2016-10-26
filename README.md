@@ -1,6 +1,5 @@
 # GaitAnalysis
 
-Basic Movie Ticket Reservation using C# in Microsoft Visual Studio 2012
 
 # Git - the simple guide
 Kindly refer to the link for more information
