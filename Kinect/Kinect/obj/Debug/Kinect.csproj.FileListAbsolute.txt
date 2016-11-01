@@ -6,6 +6,7 @@ C:\Users\Cosmic\Documents\Visual Studio 2015\Projects\Kinect\Kinect\bin\Debug\Mi
 C:\Users\Cosmic\Documents\Visual Studio 2015\Projects\Kinect\Kinect\bin\Debug\Microsoft.Kinect.xml
 C:\Users\Cosmic\Documents\Visual Studio 2015\Projects\Kinect\Kinect\obj\Debug\Kinect.exe
 C:\Users\Cosmic\Documents\Visual Studio 2015\Projects\Kinect\Kinect\obj\Debug\Kinect.pdb
+<<<<<<< HEAD
 C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\Kinect.exe.config
 C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\obj\Debug\Kinect.exe
 C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\obj\Debug\Kinect.pdb
@@ -14,3 +15,5 @@ C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\Kinect.pdb
 C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\Microsoft.Kinect.dll
 C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\Microsoft.Kinect.xml
 C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\obj\Debug\Kinect.csprojResolveAssemblyReference.cache
+=======
+>>>>>>> refs/remotes/origin/master

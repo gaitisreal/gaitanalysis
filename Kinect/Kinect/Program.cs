@@ -35,6 +35,7 @@ namespace Kinect
 
     internal class Tracker
     {
+<<<<<<< HEAD
         int frame = 0;
         DateTime startTime;
         DateTime time;
@@ -63,6 +64,8 @@ namespace Kinect
 
         Tuple<float, float, float, float> floorPlane;
 
+=======
+>>>>>>> refs/remotes/origin/master
         private Skeleton[] skeletons = null;
 
         public Tracker(KinectSensor sensor)
@@ -70,6 +73,7 @@ namespace Kinect
             // Connect the skeleton frame handler and enable skeleton tracking
             sensor.SkeletonFrameReady += SensorSkeletonFrameReady;
             sensor.SkeletonStream.Enable();
+<<<<<<< HEAD
             sensor.DepthStream.Enable();
         }
 
@@ -78,6 +82,14 @@ namespace Kinect
         private void SensorSkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
         {
             floorPlane = FloorClipPlane;
+=======
+        }
+
+        private void SensorSkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
+        {
+            int ctr = 0;
+            double cm = 0;
+>>>>>>> refs/remotes/origin/master
             // Access the skeleton frame
             using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
             {
@@ -88,7 +100,11 @@ namespace Kinect
                         // Allocate array of skeletons
                         this.skeletons = new Skeleton[skeletonFrame.SkeletonArrayLength];
                     }
+<<<<<<< HEAD
                     
+=======
+
+>>>>>>> refs/remotes/origin/master
                     // Copy skeletons from this frame
                     skeletonFrame.CopySkeletonDataTo(this.skeletons);
 
@@ -97,13 +113,18 @@ namespace Kinect
 
                     if (skeleton != null)
                     {
+<<<<<<< HEAD
                         // Obtain parameters; if tracked, print its position
+=======
+                        // Obtain the left knee joint; if tracked, print its position
+>>>>>>> refs/remotes/origin/master
                         Joint kneeLeft = skeleton.Joints[JointType.KneeLeft];
                         Joint kneeRight = skeleton.Joints[JointType.KneeRight];
                         Joint ankleLeft = skeleton.Joints[JointType.AnkleLeft];
                         Joint ankleRight = skeleton.Joints[JointType.AnkleRight];
                         Joint footLeft = skeleton.Joints[JointType.FootLeft];
                         Joint footRight = skeleton.Joints[JointType.FootRight];
+<<<<<<< HEAD
                         //Joint hipLeft = skeleton.Joints[JointType.HipLeft];
                         //Joint hipRight = skeleton.Joints[JointType.HipRight];
                         //Joint hipCenter = skeleton.Joints[JointType.HipCenter];
@@ -171,8 +192,29 @@ namespace Kinect
                             System.exit;
                         }
                     }*/
+=======
+                        Joint hipLeft = skeleton.Joints[JointType.HipLeft];
+                        Joint hipRight = skeleton.Joints[JointType.HipRight];
+                        Joint hipCenter = skeleton.Joints[JointType.HipCenter];
+
+                        //Console.WriteLine(ankleLeft.Position.X + " " + ankleLeft.Position.Y + " " + ankleLeft.Position.Z);
+
+                        double distance = Math.Sqrt(Math.Pow(skeleton.Joints[JointType.HandRight].Position.X - skeleton.Joints[JointType.HandLeft].Position.X, 2) + Math.Pow(skeleton.Joints[JointType.HandRight].Position.Y - skeleton.Joints[JointType.HandLeft].Position.Y, 2) +
+                            Math.Pow(skeleton.Joints[JointType.HandRight].Position.Z - skeleton.Joints[JointType.HandLeft].Position.Z, 2));
+                        double stepLength = Math.Round(distance * 100, 2);
+
+                        /*if ((ankleLeft.Position.Y > -0.54 && ankleLeft.Position.Y < -0.53 && ankleRight.Position.Y > -0.54 && ankleRight.Position.Y < -0.53) &&
+                            (ankleLeft.Position.Y > 1.79 && ankleLeft.Position.Y < 1.80 && ankleRight.Position.Y > 1.79 && ankleRight.Position.Y < 1.80))*/
+                        //Console.Clear();
+                        Console.WriteLine(stepLength);
+                    }
+>>>>>>> refs/remotes/origin/master
                 }
             }
         }
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> refs/remotes/origin/master
