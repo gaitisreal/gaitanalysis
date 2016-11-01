@@ -16,6 +16,7 @@ namespace Kinect
             if (sensor == null)
             {
                 Console.WriteLine("No Kinect sensor found!");
+                Console.ReadKey();
                 return;
             }
 
