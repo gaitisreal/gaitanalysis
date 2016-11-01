@@ -38,6 +38,9 @@ namespace Kinect
         int frame = 0;
         DateTime startTime;
         DateTime time;
+        DateTime terminateTime;
+
+        bool testStart = false;
 
         //Gait Parameters
         double cadence = 0;
@@ -58,6 +61,8 @@ namespace Kinect
         double[] initialPoint = new double[3];
         double[] currentPoint = new double[3];
 
+        Tuple<float, float, float, float> floorPlane;
+
         private Skeleton[] skeletons = null;
 
         public Tracker(KinectSensor sensor)
@@ -68,10 +73,11 @@ namespace Kinect
             sensor.DepthStream.Enable();
         }
 
-        public object FloorClipPane { get; private set; }
+        public Tuple<float, float, float, float> FloorClipPlane { get; set; }
 
         private void SensorSkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
         {
+            floorPlane = FloorClipPlane;
             // Access the skeleton frame
             using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
             {
@@ -82,7 +88,7 @@ namespace Kinect
                         // Allocate array of skeletons
                         this.skeletons = new Skeleton[skeletonFrame.SkeletonArrayLength];
                     }
-
+                    
                     // Copy skeletons from this frame
                     skeletonFrame.CopySkeletonDataTo(this.skeletons);
 
@@ -112,7 +118,7 @@ namespace Kinect
                                         Math.Pow(ankleRight.Position.Z - ankleLeft.Position.Z, 2)) * 100, 2);
                         }
 
-                        //Distance Traveled
+                        //Stride Velocity
                         if (footLeft.TrackingState == JointTrackingState.Tracked)
                         {
                             if (initialPoint[0] == 0 && initialPoint[1] == 0 && initialPoint[2] == 0)
@@ -122,6 +128,7 @@ namespace Kinect
                                 initialPoint[2] = footLeft.Position.Z;
                                 initialTime = time.Hour * 3600 + time.Minute * 60 + time.Second;
                                 startTime = DateTime.Now;
+                                testStart = !testStart;
                             }
                             else
                             {
@@ -134,7 +141,7 @@ namespace Kinect
                                 totalDistance = Math.Round(Math.Sqrt(Math.Pow(initialPoint[0] - currentPoint[0], 2) +
                                                 Math.Pow(initialPoint[0] - currentPoint[0], 2) +
                                                 Math.Pow(initialPoint[0] - currentPoint[0], 2)) * 100, 2);
-                                strideVelocity = totalDistance / totalTime;
+                                strideVelocity = Math.Round(totalDistance / totalTime, 2);
                             }
                         }
 
@@ -142,14 +149,28 @@ namespace Kinect
                             Console.Clear();
 
                         Console.WriteLine("Frame: " + ++frame);
+                        Console.WriteLine();
+                        Console.WriteLine("Gait Parameters");
                         Console.WriteLine("Step Length: " + stepLength + "cm");
                         Console.WriteLine("Stride Velocity: " + strideVelocity + "cm/s");
+                        Console.WriteLine();
                         Console.WriteLine("Distance Traveled: " + totalDistance + "cm");
                         Console.WriteLine("Time Traveled: " + totalTime + "s");
+                        Console.WriteLine();
+                        Console.WriteLine("Floor Plane: " + floorPlane.Item1 + " " + floorPlane.Item2 + " " + floorPlane.Item3 + " " + floorPlane.Item4);
                         Console.WriteLine("Start Time: " + startTime.Hour + ":" + startTime.Minute + ":" + startTime.Second);
                         Console.WriteLine("Current Time: " + time.Hour + ":" + time.Minute + ":" + time.Second);
                         Console.WriteLine();
                     }
+
+                    /*else if(testStart)
+                    {
+                        terminateTime = DateTime.Now;
+                        if(time.Hour * 3600 + time.Minute * 60 + time.Second + 5 == terminateTime.Hour * 3600 + terminateTime.Minute * 60 + terminateTime.Second)
+                        {
+                            System.exit;
+                        }
+                    }*/
                 }
             }
         }
