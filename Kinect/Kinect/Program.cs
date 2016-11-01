@@ -26,7 +26,7 @@ namespace Kinect
             sensor.Start();
 
             // Run until the user presses 'q' or 'Q' on the keyboard
-            while (Char.ToLowerInvariant(Console.ReadKey().KeyChar) != 'q') { }
+            //while (Char.ToLowerInvariant(Console.ReadKey().KeyChar) != 'q') { }
 
             // Stop the sensor
             sensor.Stop();
@@ -38,39 +38,63 @@ namespace Kinect
         int frame = 0;
         DateTime startTime;
         DateTime time;
-
+        DateTime terminateTime;
+        double timeInSecond = 0;
         bool testStart = false;
 
         //Gait Parameters
-        double cadence = 0;
-        double stepLength = 0;
-        double stepTime = 0;
-        double stepWidth = 0;
-        double stanceTime = 0;
-        double strideLength = 0;
-        double strideVelocity = 0;
-        double swingTime = 0;
+        double cadence = 0;             //What is this?
+        double stepLength = 0;          //Done
+        double stepTime = 0;            //Done
+        double stepWidth = 0;           //What is this?
+        double stepFrequency = 0;       //Done
+        double stanceTime = 0;          //Done
+        double strideLength = 0;        //Done
+        double strideVelocity = 0;      //Done (Edit)
+        double swingTime = 0;           //Done
 
         double totalDistance = 0;
-        double totalTime = 0;
-
-        double initialTime = 0;
-        double currentTime = 0;
-
         double[] initialPoint = new double[3];
         double[] currentPoint = new double[3];
 
+        double totalTime = 0;
+        double initialTime = 0;
+        double currentTime = 0;
+
+        int stanceCounter = 0;
         double stanceTimeTotal = 0;
+        double initialStanceTime = 0;
+        double terminalStanceTime = 0;
+
+        int swingCounter = 0;
         double swingTimeTotal = 0;
+        double initialSwingTime = 0;
+        double terminalSwingTime = 0;
 
-        double strideLengthTotal = 0;
+        int stepCounter = 0;
+        bool stepProcessingLeft = false;
+        bool stepProcessingRight = false;
+        double stepTimeTotal = 0;
+        double initialStepTime = 0;
+        double terminalStepTime = 0;
+
         double stepLengthTotal = 0;
+        double[,] initialStepPoint = new double[2,3];
+        double[,] terminalStepPoint = new double[2,3];
 
-        double[] stepInitialPoint = new double[3];
-        double[] stepTerminalPoint = new double[3];
+        int strideCounter = 0;
+        bool strideProcessingLeft = false;
+        bool strideProcessingRight = false;
+        double strideLengthTotal = 0;
+        double[,] initialStridePoint = new double[2,3];
+        double[,] terminalStridePoint = new double[2,3];
 
-        bool leftOnFloor = false;
-        bool rightOnFloor = false;
+        bool leftOnFloor = true;
+        bool rightOnFloor = true;
+        double leftOnFloorTrue = 0;
+        double leftOnFloorFalse = 0;
+        double rightOnFloorTrue = 0;
+        double rightOnFloorFalse = 0;
         bool stance = false;
 
         private Skeleton[] skeletons = null;
@@ -78,37 +102,31 @@ namespace Kinect
 
         public Tracker(KinectSensor sensor)
         {
-            // Connect the skeleton frame handler and enable skeleton tracking
             sensor.SkeletonFrameReady += SensorSkeletonFrameReady;
             sensor.SkeletonStream.Enable();
             sensor.DepthStream.Enable();
+            //sensor.Stop();
         }
 
         private void SensorSkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
         {
-            // Access the skeleton frame
             using (SkeletonFrame skeletonFrame = e.OpenSkeletonFrame())
             {
                 floorPlane = skeletonFrame.FloorClipPlane;
+
                 if (skeletonFrame != null)
                 {
                     if (this.skeletons == null)
                     {
-                        // Allocate array of skeletons
                         this.skeletons = new Skeleton[skeletonFrame.SkeletonArrayLength];
                     }
 
-                    // Copy skeletons from this frame
                     skeletonFrame.CopySkeletonDataTo(this.skeletons);
-
-                    // Find first tracked skeleton, if any
                     Skeleton skeleton = this.skeletons.Where(s => s.TrackingState == SkeletonTrackingState.Tracked).FirstOrDefault();
-
                     floorPlane = skeletonFrame.FloorClipPlane;
 
                     if (skeleton != null)
                     {
-                        // Obtain parameters; if tracked, print its position
                         Joint kneeLeft = skeleton.Joints[JointType.KneeLeft];
                         Joint kneeRight = skeleton.Joints[JointType.KneeRight];
                         Joint ankleLeft = skeleton.Joints[JointType.AnkleLeft];
@@ -116,139 +134,324 @@ namespace Kinect
                         Joint footLeft = skeleton.Joints[JointType.FootLeft];
                         Joint footRight = skeleton.Joints[JointType.FootRight];
 
-                        if ((ankleLeft.TrackingState == JointTrackingState.Tracked && ankleLeft.TrackingState == JointTrackingState.Tracked) &&
-                            (footLeft.TrackingState == JointTrackingState.Tracked && footLeft.TrackingState == JointTrackingState.Tracked) &&
-                            (kneeLeft.TrackingState == JointTrackingState.Tracked && kneeLeft.TrackingState == JointTrackingState.Tracked))
+                        if ((ankleLeft.TrackingState == JointTrackingState.Tracked && ankleLeft.TrackingState == JointTrackingState.Tracked) && (footLeft.TrackingState == JointTrackingState.Tracked && footLeft.TrackingState == JointTrackingState.Tracked) && (kneeLeft.TrackingState == JointTrackingState.Tracked && kneeLeft.TrackingState == JointTrackingState.Tracked))
                         {
                             time = DateTime.Now;
+                            timeInSecond = time.Minute * 60 + time.Second;
 
-                            float leftFootFloorDistance = (float)Math.Round(Math.Abs((floorPlane.Item1 * footLeft.Position.X) + (floorPlane.Item2 * footLeft.Position.Y) + (floorPlane.Item3 * footLeft.Position.Z) + floorPlane.Item4) /
-                                       Math.Sqrt(Math.Pow(footLeft.Position.X, 2) + Math.Pow(footLeft.Position.Y, 2) + Math.Pow(footLeft.Position.Z, 2)) * 1000, 2);
+                            float leftFootFloorDistance = (float)Math.Round(Math.Abs((floorPlane.Item1 * footLeft.Position.X) + (floorPlane.Item2 * footLeft.Position.Y) + (floorPlane.Item3 * footLeft.Position.Z) + floorPlane.Item4) / Math.Sqrt(Math.Pow(footLeft.Position.X, 2) + Math.Pow(footLeft.Position.Y, 2) + Math.Pow(footLeft.Position.Z, 2)) * 1000, 2);
+                            float rightFootFloorDistance = (float)Math.Round(Math.Abs((floorPlane.Item1 * footRight.Position.X) + (floorPlane.Item2 * footRight.Position.Y) + (floorPlane.Item3 * footRight.Position.Z) + floorPlane.Item4) / Math.Sqrt(Math.Pow(footRight.Position.X, 2) + Math.Pow(footRight.Position.Y, 2) + Math.Pow(footRight.Position.Z, 2)) * 1000, 2);
+                            
+                            //Improve Accuracy Calibration (Disregard bad skeletons)
+                            if(leftFootFloorDistance < 17)
+                            {
+                                if (leftOnFloorFalse < 5)
+                                    leftOnFloorFalse = 0;
+                                if (++leftOnFloorTrue == 7)
+                                {
+                                    leftOnFloor = true;
+                                    leftOnFloorTrue = 0;
+                                    leftOnFloorFalse = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (leftOnFloorTrue < 5)
+                                    leftOnFloorTrue = 0;
+                                if (++leftOnFloorFalse == 7)
+                                {
+                                    leftOnFloor = false;
+                                    leftOnFloorTrue = 0;
+                                    leftOnFloorFalse = 0;
+                                }
+                            }
 
-                            float rightFootFloorDistance = (float)Math.Round(Math.Abs((floorPlane.Item1 * footRight.Position.X) + (floorPlane.Item2 * footRight.Position.Y) + (floorPlane.Item3 * footRight.Position.Z) + floorPlane.Item4) /
-                                       Math.Sqrt(Math.Pow(footRight.Position.X, 2) + Math.Pow(footRight.Position.Y, 2) + Math.Pow(footRight.Position.Z, 2)) * 1000, 2);
-
-                            leftOnFloor = leftFootFloorDistance < 25;
-                            rightOnFloor = rightFootFloorDistance < 25;
+                            if (rightFootFloorDistance < 17)
+                            {
+                                if (rightOnFloorFalse < 5)
+                                    rightOnFloorFalse = 0;
+                                if (++rightOnFloorTrue == 7)
+                                {
+                                    rightOnFloor = true;
+                                    rightOnFloorTrue = 0;
+                                    rightOnFloorFalse = 0;
+                                }
+                            }
+                            else
+                            {
+                                if (rightOnFloorTrue < 5)
+                                    rightOnFloorTrue = 0;
+                                if (++rightOnFloorFalse == 7)
+                                {
+                                    rightOnFloor = false;
+                                    rightOnFloorTrue = 0;
+                                    rightOnFloorFalse = 0;
+                                }
+                            }
 
                             stance = leftOnFloor && rightOnFloor;
 
                             if (stance)
                             {
-                                Console.Clear();
-                                Console.BackgroundColor = ConsoleColor.Red;
+                                //Console.Clear();
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                //Console.BackgroundColor = ConsoleColor.Red;
                             }
                             else
                             {
-                                Console.Clear();
-                                Console.BackgroundColor = ConsoleColor.Blue;
-                            }
-
-                            //Stride Length
-                            if (ankleLeft.TrackingState == JointTrackingState.Tracked && ankleLeft.TrackingState == JointTrackingState.Tracked)
-                            {
-                                strideLengthTotal += Math.Round(Math.Sqrt(Math.Pow(ankleRight.Position.X - ankleLeft.Position.X, 2) +
-                                            Math.Pow(ankleRight.Position.Y - ankleLeft.Position.Y, 2) +
-                                            Math.Pow(ankleRight.Position.Z - ankleLeft.Position.Z, 2)) * 100, 2);
-                                strideLength = Math.Round(strideLengthTotal / frame, 2);
+                                //Console.Clear();
+                                if(!leftOnFloor && !rightOnFloor)
+                                    Console.ForegroundColor = ConsoleColor.White;
+                                else if(!leftOnFloor)
+                                    Console.ForegroundColor = ConsoleColor.Blue;
+                                else if (!rightOnFloor)
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                //Console.BackgroundColor = ConsoleColor.Green;
                             }
 
                             //Stride Velocity
-                            if (footLeft.TrackingState == JointTrackingState.Tracked)
+                            if (initialPoint[0] == 0 && initialPoint[1] == 0 && initialPoint[2] == 0)
                             {
-                                if (initialPoint[0] == 0 && initialPoint[1] == 0 && initialPoint[2] == 0)
+                                initialPoint[0] = footLeft.Position.X;
+                                initialPoint[1] = footLeft.Position.Y;
+                                initialPoint[2] = footLeft.Position.Z;
+                                initialTime = timeInSecond;
+                                startTime = DateTime.Now;
+                            }
+                            else
+                            {
+                                currentPoint[0] = footLeft.Position.X;
+                                currentPoint[1] = footLeft.Position.Y;
+                                currentPoint[2] = footLeft.Position.Z;
+                                currentTime = timeInSecond;
+
+                                totalDistance = Math.Round(Math.Sqrt(Math.Pow(initialPoint[0] - currentPoint[0], 2) + Math.Pow(initialPoint[0] - currentPoint[0], 2) + Math.Pow(initialPoint[0] - currentPoint[0], 2)) * 100, 2);
+                                totalTime = currentTime - initialTime;
+
+                                strideVelocity = Math.Round(totalDistance / totalTime, 2);
+                            }
+
+                            //Step Length and Step Frequency (Right Foot)
+
+                            if (!rightOnFloor)
+                            {
+                                if (!stepProcessingRight)
                                 {
-                                    initialPoint[0] = footLeft.Position.X;
-                                    initialPoint[1] = footLeft.Position.Y;
-                                    initialPoint[2] = footLeft.Position.Z;
-                                    initialTime = time.Hour * 3600 + time.Minute * 60 + time.Second;
-                                    startTime = DateTime.Now;
+                                    stepProcessingRight = true;
+                                    initialStepPoint[1,0] = footRight.Position.X;
+                                    initialStepPoint[1, 1] = footRight.Position.Y;
+                                    initialStepPoint[1, 2] = footRight.Position.Z;
+                                    initialStepTime = timeInSecond;
                                 }
                                 else
                                 {
-                                    currentPoint[0] = footLeft.Position.X;
-                                    currentPoint[1] = footLeft.Position.Y;
-                                    currentPoint[2] = footLeft.Position.Z;
-                                    currentTime = time.Hour * 3600 + time.Minute * 60 + time.Second;
-
-                                    totalDistance = Math.Round(Math.Sqrt(Math.Pow(initialPoint[0] - currentPoint[0], 2) +
-                                                    Math.Pow(initialPoint[0] - currentPoint[0], 2) +
-                                                    Math.Pow(initialPoint[0] - currentPoint[0], 2)) * 100, 2);
-                                    totalTime = currentTime - initialTime;
-                                    strideVelocity = Math.Round(totalDistance / totalTime, 2);
+                                    terminalStepPoint[1, 0] = footRight.Position.X;
+                                    terminalStepPoint[1, 1] = footRight.Position.Y;
+                                    terminalStepPoint[1, 2] = footRight.Position.Z;
+                                    terminalStepTime = timeInSecond;
                                 }
                             }
 
-                            //Step Length
+                            else
+                            {
+                                if (stepProcessingRight)
+                                {
+                                    stepProcessingRight = false;
+
+                                    ++stepCounter;
+                                    stepLengthTotal += Math.Round(Math.Sqrt(Math.Pow(initialStepPoint[1, 0] - terminalStepPoint[1, 0], 2) + Math.Pow(initialStepPoint[1, 1] - terminalStepPoint[1, 1], 2) + Math.Pow(initialStepPoint[1, 2] - terminalStepPoint[1, 2], 2)) * 100, 2);
+                                    stepLength = Math.Round(stepLengthTotal / stepCounter, 2);
+
+                                    stepTimeTotal += terminalStepTime - initialStepTime;
+                                    stepTime = Math.Round(stepTimeTotal / stepCounter, 2);
+
+                                    stepFrequency = Math.Round(stepCounter / (totalTime / 60), 2);
+
+                                    initialStepPoint[1, 0] = 0;
+                                    initialStepPoint[1, 1] = 0;
+                                    initialStepPoint[1, 2] = 0;
+                                    initialStepTime = 0;
+
+                                    terminalStepPoint[1, 0] = 0;
+                                    terminalStepPoint[1, 1] = 0;
+                                    terminalStepPoint[1, 2] = 0;
+                                    terminalStepTime = 0;
+                                }
+                            }
+
+                            //Step Length and Step Frequency (Left Foot)
                             if (!leftOnFloor)
                             {
-                                if (rightOnFloor)
+                                if (!stepProcessingLeft)
                                 {
-                                    if (stepInitialPoint[0] == 0 && stepInitialPoint[1] == 0 && stepInitialPoint[2] == 0)
-                                    {
-                                        stepInitialPoint[0] = footLeft.Position.X;
-                                        stepInitialPoint[1] = footLeft.Position.Y;
-                                        stepInitialPoint[2] = footLeft.Position.Z;
-                                    }
-                                    else
-                                    {
-                                        stepTerminalPoint[0] = footLeft.Position.X;
-                                        stepTerminalPoint[1] = footLeft.Position.Y;
-                                        stepTerminalPoint[2] = footLeft.Position.Z;
-                                    }
+                                    stepProcessingLeft = true;
+                                    initialStepPoint[0, 0] = footLeft.Position.X;
+                                    initialStepPoint[0, 1] = footLeft.Position.Y;
+                                    initialStepPoint[0, 2] = footLeft.Position.Z;
+                                    initialStepTime = timeInSecond;
                                 }
                                 else
                                 {
-                                    if (!(stepInitialPoint[0] == 0 && stepInitialPoint[1] == 0 && stepInitialPoint[2] == 0))
-                                    {
-                                        stepLengthTotal += Math.Round(Math.Sqrt(Math.Pow(stepInitialPoint[0] - stepTerminalPoint[0], 2) +
-                                                    Math.Pow(stepInitialPoint[0] - stepTerminalPoint[0], 2) +
-                                                    Math.Pow(stepInitialPoint[0] - stepTerminalPoint[0], 2)) * 100, 2);
-                                        stepLength = Math.Round(stepLengthTotal / frame, 2);
-
-                                        stepInitialPoint[0] = 0;
-                                        stepInitialPoint[1] = 0;
-                                        stepInitialPoint[2] = 0;
-
-                                        stepTerminalPoint[0] = 0;
-                                        stepTerminalPoint[1] = 0;
-                                        stepTerminalPoint[2] = 0;
-                                    }
+                                    terminalStepPoint[0, 0] = footLeft.Position.X;
+                                    terminalStepPoint[0, 1] = footLeft.Position.Y;
+                                    terminalStepPoint[0, 2] = footLeft.Position.Z;
+                                    terminalStepTime = timeInSecond;
                                 }
                             }
 
-                            //Stance Time
-                            if (stance) { }
-                            /*if (frame % 30 == 9)
+                            else
+                            {
+                                if (stepProcessingLeft)
+                                {
+                                    stepProcessingLeft = false;
+                                    
+                                    ++stepCounter;
+                                    stepLengthTotal += Math.Round(Math.Sqrt(Math.Pow(initialStepPoint[0, 0] - terminalStepPoint[0, 0], 2) + Math.Pow(initialStepPoint[0, 1] - terminalStepPoint[0, 1], 2) + Math.Pow(initialStepPoint[0, 2] - terminalStepPoint[0, 2], 2)) * 100, 2);
+                                    stepLength = Math.Round(stepLengthTotal / stepCounter, 2);
+
+                                    stepTimeTotal += terminalStepTime - initialStepTime;
+                                    stepTime = Math.Round(stepTimeTotal / stepCounter, 2);
+
+                                    stepFrequency = Math.Round(stepCounter / (totalTime / 60), 2);
+
+                                    initialStepPoint[0, 0] = 0;
+                                    initialStepPoint[0, 1] = 0;
+                                    initialStepPoint[0, 2] = 0;
+                                    initialStepTime = 0;
+
+                                    terminalStepPoint[0, 0] = 0;
+                                    terminalStepPoint[0, 1] = 0;
+                                    terminalStepPoint[0, 2] = 0;
+                                    terminalStepTime = 0;
+                                }
+                            }
+
+                            //Stride Length (Left Foot)
+                            if (stance && strideProcessingLeft)
+                            {
+                                strideProcessingLeft = false;
+                                initialStridePoint[1, 0] = footRight.Position.X;
+                                initialStridePoint[1, 1] = footRight.Position.Y;
+                                initialStridePoint[1, 2] = footRight.Position.Z;
+
+                                terminalStridePoint[1, 0] = footLeft.Position.X;
+                                terminalStridePoint[1, 1] = footLeft.Position.Y;
+                                terminalStridePoint[1, 2] = footLeft.Position.Z;
+
+                                ++strideCounter;
+                                strideLengthTotal += Math.Round(Math.Sqrt(Math.Pow(initialStridePoint[1, 0] - terminalStridePoint[1, 0], 2) + Math.Pow(initialStridePoint[1, 1] - terminalStridePoint[1, 1], 2) + Math.Pow(initialStridePoint[1, 2] - terminalStridePoint[1, 2], 2)) * 100, 2);
+                                strideLength = Math.Round(strideLengthTotal / strideCounter, 2);
+                            }
+
+                            //Stride Length (Right Foot)
+                            /*if (leftOnFloor)
+                            {
+                                if (!strideProcessingRight)
+                                {
+                                    strideProcessingRight = true;
+                                    initialStridePoint[0, 0] = footLeft.Position.X;
+                                    initialStridePoint[0, 1] = footLeft.Position.Y;
+                                    initialStridePoint[0, 2] = footLeft.Position.Z;
+                                }
+
+                                if (!rightOnFloor)
+                                {
+                                    terminalStridePoint[0, 0] = footRight.Position.X;
+                                    terminalStridePoint[0, 1] = footRight.Position.Y;
+                                    terminalStridePoint[0, 2] = footRight.Position.Z;
+                                
+                                }
+
+                                else
+                                {
+                                    if (strideProcessingRight)
+                                    {
+
+                                        strideProcessingRight = false;
+                                        ++strideCounter;
+                                        strideLengthTotal += Math.Round(Math.Sqrt(Math.Pow(initialStridePoint[0, 0] - terminalStridePoint[0, 0], 2) + Math.Pow(initialStridePoint[0, 1] - terminalStridePoint[0, 1], 2) + Math.Pow(initialStridePoint[0, 2] - terminalStridePoint[0, 2], 2)) * 100, 2);
+                                        strideLength = Math.Round(strideLengthTotal / strideCounter, 2);
+
+                                        initialStridePoint[0, 0] = 0;
+                                        initialStridePoint[0, 1] = 0;
+                                        initialStridePoint[0, 2] = 0;
+
+                                        terminalStridePoint[0, 0] = 0;
+                                        terminalStridePoint[0, 1] = 0;
+                                        terminalStridePoint[0, 2] = 0;
+                                    }
+                                }
+                            }*/
+
+                            //Stance Time and Swing Time
+                            if (stance)
+                            {
+                                if (!(initialSwingTime == 0))
+                                {
+                                    ++swingCounter;
+                                    swingTimeTotal += terminalSwingTime - initialSwingTime;
+                                    swingTime = Math.Round(swingTimeTotal / swingCounter);
+                                }
+
+                                if (initialStanceTime == 0)
+                                    initialStanceTime = timeInSecond;
+                                else
+                                    terminalStanceTime = timeInSecond;
+                            }
+
+                            if (!stance)
+                            {
+                                strideProcessingLeft = true;
+                                if(!(initialStanceTime == 0))
+                                {
+                                    ++stanceCounter;
+                                    stanceTimeTotal += terminalStanceTime - initialStanceTime;
+                                    stanceTime = Math.Round(stanceTimeTotal / stanceCounter);
+                                }
+
+                                if (initialSwingTime == 0)
+                                    initialSwingTime = timeInSecond;
+                                else
+                                    terminalSwingTime = timeInSecond;
+                            }
+
+                            if (frame % 300 == 9)
                                 Console.Clear();
 
                             Console.WriteLine("Frame: " + ++frame);
                             Console.WriteLine();
                             Console.WriteLine("Gait Parameters");
                             Console.WriteLine("Step Length: " + stepLength + "cm");
+                            Console.WriteLine("Step Time: " + stepTime + "s");
+                            Console.WriteLine("Step Frequency: " + stepFrequency + " steps/min");
                             Console.WriteLine("Stride Length: " + strideLength + "cm");
                             Console.WriteLine("Stride Velocity: " + strideVelocity + "cm/s");
-                            Console.WriteLine();
-                            Console.WriteLine("Left Foot distance from Floor: " + leftFootFloorDistance);
+                            Console.WriteLine("Stance Time: " + stanceTime + "s");
+                            Console.WriteLine("Swing Time: " + swingTime + "s");
+                            //Console.WriteLine();
+                            //Console.WriteLine("Step Counter: " + stepCounter + " step/s");
+                            //Console.WriteLine("Stride Counter: " + strideCounter + " step/s");
+                            /*Console.WriteLine("Left Foot distance from Floor: " + leftFootFloorDistance);
                             Console.WriteLine("Right Foot distance from Floor: " + rightFootFloorDistance);
-                            Console.WriteLine("Stance Status: " + stance);
-                            Console.WriteLine("Distance Traveled: " + totalDistance + "cm");
-                            Console.WriteLine("Time Traveled: " + totalTime + "s");
-                            Console.WriteLine();
+                            Console.WriteLine("Stance Status: " + stance);*/
+                            //Console.WriteLine("Distance Traveled: " + totalDistance + "cm");
+                            //Console.WriteLine("Time Traveled: " + totalTime + "s");
+                            /*Console.WriteLine();
                             Console.WriteLine("Start Time: " + startTime.Hour + ":" + startTime.Minute + ":" + startTime.Second);
-                            Console.WriteLine("Current Time: " + time.Hour + ":" + time.Minute + ":" + time.Second);
-                            Console.WriteLine();*/
+                            Console.WriteLine("Current Time: " + time.Hour + ":" + time.Minute + ":" + time.Second);*/
+                            Console.WriteLine();
+                        }
+
+                        else
+                        {
+                            terminateTime = DateTime.Now;
+                            if (timeInSecond + 5 == terminateTime.Minute * 60 + terminateTime.Second)
+                            {
+                                Console.Clear();
+                                return;
+                            }
                         }
                     }
-
-                    /*else if(testStart)
-                    {
-                        terminateTime = DateTime.Now;
-                        if(time.Hour * 3600 + time.Minute * 60 + time.Second + 5 == terminateTime.Hour * 3600 + terminateTime.Minute * 60 + terminateTime.Second)
-                        {
-                            System.exit;
-                        }
-                    }*/
                 }
             }
         }
