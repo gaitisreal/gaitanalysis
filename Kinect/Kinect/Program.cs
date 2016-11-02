@@ -12,6 +12,7 @@ namespace Kinect
         static double gaitSpeed = 0;
         static double stepLength = 0;
         static double stepFrequency = 0;
+        static SystemDB sysDB;
         private static void Main(string[] args)
         {
             // Find the first connected sensor
@@ -40,6 +41,11 @@ namespace Kinect
             stepLength = tracker.stepLength;
 
             //Analysis
+            sysDB = new SystemDB();
+            Console.WriteLine(sysDB.AnalyzeData("spd", 18, 'M', gaitSpeed));
+            Console.WriteLine(sysDB.AnalyzeData("freq", 18, 'M', stepFrequency));
+            Console.WriteLine(sysDB.AnalyzeData("len", 18, 'M', stepLength));
+            Console.ReadKey();
         }
     }
 
