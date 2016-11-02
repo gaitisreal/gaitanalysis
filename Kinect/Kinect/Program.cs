@@ -9,6 +9,9 @@ namespace Kinect
 {
     internal class Program
     {
+        static double gaitSpeed = 0;
+        static double stepLength = 0;
+        static double stepFrequency = 0;
         private static void Main(string[] args)
         {
             // Find the first connected sensor
@@ -27,10 +30,16 @@ namespace Kinect
             sensor.Start();
 
             // Run until the user presses 'q' or 'Q' on the keyboard
-            //while (Char.ToLowerInvariant(Console.ReadKey().KeyChar) != 'q') { }
+            while (Char.ToLowerInvariant(Console.ReadKey().KeyChar) != 'q') { }
 
             // Stop the sensor
             sensor.Stop();
+
+            gaitSpeed = tracker.strideVelocity;
+            stepFrequency = tracker.stepFrequency;
+            stepLength = tracker.stepLength;
+
+            //Analysis
         }
     }
 
@@ -45,13 +54,13 @@ namespace Kinect
 
         //Gait Parameters
         double cadence = 0;             //What is this?
-        double stepLength = 0;          //Done
+        public double stepLength = 0;          //Done
         double stepTime = 0;            //Done
         double stepWidth = 0;           //What is this?
-        double stepFrequency = 0;       //Done
+        public double stepFrequency = 0;       //Done
         double stanceTime = 0;          //Done
         double strideLength = 0;        //Done
-        double strideVelocity = 0;      //Done (Edit)
+        public double strideVelocity = 0;      //Done (Edit)
         double swingTime = 0;           //Done
 
         double totalDistance = 0;
@@ -266,7 +275,7 @@ namespace Kinect
                                     stepTimeTotal += terminalStepTime - initialStepTime;
                                     stepTime = Math.Round(stepTimeTotal / stepCounter, 2);
 
-                                    stepFrequency = Math.Round(stepCounter / (totalTime / 60), 2);
+                                    stepFrequency = Math.Round(stepCounter / (totalTime), 2);
 
                                     initialStepPoint[1, 0] = 0;
                                     initialStepPoint[1, 1] = 0;
@@ -313,7 +322,7 @@ namespace Kinect
                                     stepTimeTotal += terminalStepTime - initialStepTime;
                                     stepTime = Math.Round(stepTimeTotal / stepCounter, 2);
 
-                                    stepFrequency = Math.Round(stepCounter / (totalTime / 60), 2);
+                                    stepFrequency = Math.Round(stepCounter / (totalTime), 2);
 
                                     initialStepPoint[0, 0] = 0;
                                     initialStepPoint[0, 1] = 0;
@@ -424,7 +433,7 @@ namespace Kinect
                             Console.WriteLine("Gait Parameters");
                             Console.WriteLine("Step Length: " + stepLength + "cm");
                             Console.WriteLine("Step Time: " + stepTime + "s");
-                            Console.WriteLine("Step Frequency: " + stepFrequency + " steps/min");
+                            Console.WriteLine("Step Frequency: " + stepFrequency + " steps/sec");
                             Console.WriteLine("Stride Length: " + strideLength + "cm");
                             Console.WriteLine("Stride Velocity: " + strideVelocity + "cm/s");
                             Console.WriteLine("Stance Time: " + stanceTime + "s");
@@ -442,15 +451,14 @@ namespace Kinect
                             Console.WriteLine("Current Time: " + time.Hour + ":" + time.Minute + ":" + time.Second);*/
                             Console.WriteLine();
                         }
-
-                        else
+                    }
+                    else
+                    {
+                        terminateTime = DateTime.Now;
+                        if (timeInSecond + 5 == terminateTime.Minute * 60 + terminateTime.Second)
                         {
-                            terminateTime = DateTime.Now;
-                            if (timeInSecond + 5 == terminateTime.Minute * 60 + terminateTime.Second)
-                            {
-                                Console.Clear();
-                                return;
-                            }
+                            Console.Clear();
+                            return;
                         }
                     }
                 }

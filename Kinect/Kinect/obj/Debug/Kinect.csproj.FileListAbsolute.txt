@@ -23,3 +23,5 @@ C:\Users\Jan\Documents\GitHub\gaitanalysis\Kinect\Kinect\obj\Debug\Kinect.pdb
 C:\Users\Jan\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\Kinect.exe
 C:\Users\Jan\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\Kinect.pdb
 C:\Users\Jan\Documents\GitHub\gaitanalysis\Kinect\Kinect\obj\Debug\Kinect.csprojResolveAssemblyReference.cache
+C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\MySql.Data.dll
+C:\Users\Cosmic\Documents\GitHub\gaitanalysis\Kinect\Kinect\bin\Debug\MySql.Data.xml
