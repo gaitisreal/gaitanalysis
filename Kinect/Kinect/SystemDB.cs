@@ -15,13 +15,13 @@ namespace Kinect
         static string connString, query;
         public SystemDB()
         {
-            connString = "server=localhost;uid=root;password=1234;database=gasystemdb;";
+            connString = "server=localhost;uid=root;password=;database=gasystemdb;";
             dbconn =  new MySqlConnection(connString);
         }
         public string AnalyzeData(string type, int age, char gender, double strideVelocity)
         {
             // string type determines which table to be analyzed. if speed(velocity), steplength(stridelength), or stepfrequency
-
+            dbconn.Open();
             double ci_lower = 0.00, ci_upper = 0.00, pi_lower = 0.00, pi_upper = 0.00;
             string output = "", table, varName;
             switch (type)
@@ -49,7 +49,7 @@ namespace Kinect
                 output = "The " + varName + " is less than the normal range.";
             else if (strideVelocity > ci_upper)
                 output = "The " + varName + " is greater than the normal range.";
-
+            dbconn.Close();
             return output;
         }
     }
